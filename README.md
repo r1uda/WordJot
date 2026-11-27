@@ -42,3 +42,7 @@ WordJot让你在课堂上输入一个词就继续听课。输入先存入手机�
 - [构建及测试结果](测试与限制.md) 列出设备环境、执行过的检查及使用限制。
 - [ECDICT 许可](licenses/ECDICT-LICENSE.txt) 和 [CC-CEDICT 来源与许可](licenses/CC-CEDICT.txt) 随项目提供。
 
+
+## 开源许可
+
+WordJot 原创代码采用 [MIT 许可证](LICENSE)。ECDICT、CC-CEDICT 词典数据及其派生文件保留各自许可，详见 [licenses](licenses)。Gradle Wrapper 等第三方组件沿用上游许可。
