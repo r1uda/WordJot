@@ -1,0 +1,44 @@
+const assert=require('node:assert/strict');
+const {connect,disconnect,cmd,ev,wait,button,snapshot}=require('./device-ui.cjs');
+async function run(){
+  await connect();await button('class');
+  await ev("document.querySelector('#term').value='apple';document.querySelector('#capture button').click()");
+  await wait("document.querySelector('#classgloss').innerText.includes('苹果')||!showChinese");
+  await ev("document.querySelector('#term').value='draft'");
+  await button('classHistory');
+  if(!await ev('showChinese'))await button('classChinese');
+  await wait("document.querySelector('#classhistory').innerText.includes('苹果')");
+  await button('classChinese');assert.equal(await ev("document.querySelectorAll('#classhistory .classWord span').length"),0);
+  await button('classChinese');await button('classHistory');
+  assert.equal(await ev("document.querySelector('#term').value"),'draft');
+  console.log('PASS classroom inline Chinese, history, visibility toggle and intact draft');
+  await ev('goBack()');await button('cet');await wait("screen==='cet'&&!locked");
+  await button('cetExam','4');await wait('!locked');await button('cetFloor','1');await wait('!locked');
+  await button('cetStart');await wait("screen==='cetCard'&&!locked");
+  const first=await ev("document.querySelector('.english').textContent");
+  const before=(await snapshot()).words.length;
+  async function mark(a,v){await button(a,v);await wait('!locked');}
+  await mark('cetEasy');const second=await ev("document.querySelector('.english').textContent");assert.notEqual(first,second);
+  await mark('cetEasy');assert.match(await ev("document.querySelector('.progressline').textContent"),/挑战/);
+  assert.equal((await snapshot()).words.length,before,'browsing and skipping must never add words');
+  await mark('cetReveal');assert.ok(await ev("document.querySelector('.definition').textContent.length>0"));
+  const chosen=await ev("document.querySelector('.english').textContent");
+  await mark('cetKeep');await mark('cetKeep');
+  assert.equal((await snapshot()).words.length,before+2,'only explicitly selected words enter the personal notebook');
+  assert.match(await ev("document.querySelector('.progressline').textContent"),/进阶/);
+  assert.ok((await snapshot()).words.some(w=>w.en===chosen&&(w.cet&1)&&w.state==='ready'));
+  assert.ok(await ev(`rpc('cetProfile').then(p=>p[${JSON.stringify('skip:'+first)}]&&p.band4==='1')`));
+  await ev('goBack()');await mark('review');await wait("screen==='review'&&active()");
+  assert.ok(await ev("session.ids.every(id=>!!lookup(id))"));
+  assert.deepEqual(await ev('session.ids'),await ev('Study.deck(data.words,Date.now()).slice(0,20).map(w=>w.id)'));
+  await mark('flip');await mark('rate','0');
+  await ev('goBack()');await mark('cet');await mark('cetExam','6');await mark('cetFloor','2');await mark('cetStart');
+  assert.match(await ev("document.querySelector('.progressline').textContent"),/挑战/);
+  console.log('PASS CET-4/6 switching, adaptive difficulty, explicit opt-in, shared personal notebook and review queue');
+  disconnect();cmd('shell','am','force-stop','cn.inkwords.debug');await connect();await mark('cet');
+  assert.ok(await ev(`rpc('cetProfile').then(p=>p.exam==='6'&&!!p[${JSON.stringify('skip:'+first)}])`));
+  await mark('cetExam','4');await mark('cetSkipped');await button('cetUndo',first);await wait('!locked');
+  assert.ok(await ev(`rpc('cetProfile').then(p=>!p[${JSON.stringify('skip:'+first)}])`));
+  console.log('PASS persistent skip, independent course settings and undo after restart');
+}
+run().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>{try{disconnect();}catch{}});

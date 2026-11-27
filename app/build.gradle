@@ -1,0 +1,32 @@
+apply plugin: 'com.android.application'
+android {
+    namespace 'cn.inkwords'
+    compileSdk { version = release(37) }
+    defaultConfig {
+        applicationId 'cn.inkwords'
+        testInstrumentationRunner 'cn.inkwords.DeviceChecks'
+        minSdk 26
+        targetSdk 34
+        versionCode 4
+        versionName '1.2.0'
+    }
+    buildTypes.debug.applicationIdSuffix = '.debug'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    if (System.getenv('INKWORDS_KEYSTORE')) {
+        signingConfigs {
+            personal {
+                storeFile file(System.getenv('INKWORDS_KEYSTORE'))
+                storePassword System.getenv('INKWORDS_KEY_PASSWORD')
+                keyAlias 'inkwords'
+                keyPassword System.getenv('INKWORDS_KEY_PASSWORD')
+            }
+        }
+        buildTypes.release.signingConfig = signingConfigs.personal
+    }
+}
+if (System.getenv('INKWORDS_BUILD_DIR')) {
+    layout.buildDirectory.set(file(System.getenv('INKWORDS_BUILD_DIR')))
+}

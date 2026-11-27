@@ -1,0 +1,10 @@
+CC-CEDICT by the CC-CEDICT contributors, distributed by MDBG.
+Source: https://www.mdbg.net/chinese/dictionary?page=cc-cedict
+Project: https://cc-cedict.org/
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+
+The separate chinese.db distributed with WordJot is an adaptation under the
+same license. tools/make_chinese.py filters entries, removes usage notes and
+indexes simplified and traditional headwords with English glosses. The source
+database and this adaptation are provided without warranty.
